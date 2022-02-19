@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 env:
-  # Used for extracting toolchain before pushing
+  # Used for extracting sysroot before pushing
   TEMPORARY_TAG: ${{ github.repository }}:tmp
   # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io
@@ -90,26 +90,26 @@ jobs:
           load: true
           tags: ${{ env.TEMPORARY_TAG }}
 
-      - name: Export toolchain
+      - name: Export sysroot
         run: |
           container=$(docker run -d ${{ env.TEMPORARY_TAG }} \
               bash -c "chmod -R a-w sysroot; tar cJf sysroot.tar.bz2 sysroot")
           status=$(docker wait $container)
           if [ $status -ne 0 ]; then
-              echo "Error creating toolchain archives"
+              echo "Error creating sysroot archives"
               exit 1
           fi
-          echo "Copying toolchain from Docker container to host"
+          echo "Copying sysroot from Docker container to host"
           docker cp $container:/home/develop/sysroot.tar.bz2 sysroot-py${{ matrix.python-version }}-${{ matrix.triple }}.tar.bz2
           docker rm $container
 
-      - name: Upload toolchain
+      - name: Upload sysroot
         uses: actions/upload-artifact@v2
         with:
           name: sysroot-py${{ matrix.python-version }}-${{ matrix.triple }}
           path: sysroot-py${{ matrix.python-version }}-${{ matrix.triple }}.tar.bz2
 
-      - name: Release toolchain
+      - name: Release sysroot
         if: ${{ github.event.action == 'released' || github.event.action == 'prereleased' }}
         uses: softprops/action-gh-release@17cd0d34deddf848fc0e7d9be5202c148c270a0a
         with:
