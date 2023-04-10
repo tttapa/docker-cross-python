@@ -1,17 +1,26 @@
 #!/usr/bin/env bash
 
-# Script to download and build Python 3 from source
+# Script to cross-compile Python 3 from source
+# (minimal install for linking, not for direct deployment)
 
 set -ex
 
+# Paths
 version="${PYTHON_VERSION}"
 builddir="/tmp/build-cross"
 python="Python-$version"
 prefix="/usr/local"
+staging="/opt/${HOST_TRIPLE}/python-$version"
 
+# Extract
 mkdir -p "$builddir" && pushd $_
-tar xzf /home/develop/$python.tgz
+tar xzf /$python.tgz
 pushd "$python"
+
+# Patch setup.py
+if [ -e setup.py ]; then
+    sed -i 's@# Debian/Ubuntu multiarch support.@return@g' setup.py
+fi
 
 # Configure
 echo -e "ac_cv_file__dev_ptmx=yes\nac_cv_file__dev_ptc=no" > config.site
@@ -19,32 +28,21 @@ CONFIG_SITE="$PWD/config.site" \
 ./configure \
     --enable-ipv6 \
     --enable-shared \
-    --with-ensurepip=install \
-    --build="$(gcc -dumpmachine)" \
+    --disable-test-modules \
+    --build="x86_64-linux-gnu" \
     --host="${HOST_TRIPLE}" \
-    --prefix="/usr/local" \
-    CFLAGS="--sysroot=${HOST_SYSROOT} \
-                -I${HOST_SYSROOT}/usr/local/include \
-                -L${HOST_SYSROOT}/usr/local/lib" \
-    CPPFLAGS="--sysroot=${HOST_SYSROOT} \
-                -I${HOST_SYSROOT}/usr/local/include" \
-    CXXFLAGS="--sysroot=${HOST_SYSROOT} \
-                -I${HOST_SYSROOT}/usr/local/include \
-                -L${HOST_SYSROOT}/usr/local/lib" \
-    LDFLAGS="--sysroot=${HOST_SYSROOT} \
-                -L${HOST_SYSROOT}/usr/local/lib"
-    # --with-lto --enable-optimizations 
-    # --enable-loadable-sqlite-extensions --with-dbmliborder=bdb:gdbm
-cat config.log
+    --prefix="$prefix" \
+    --with-build-python="$(which python3)"
 
-# Build
-make -j$(($(nproc) + 2))
+# Patch makefile to install static libraries
+sed -i 's@libainstall:\( \|	\)all@libainstall:@g' Makefile
 
-# Install
-make install DESTDIR="${HOST_SYSROOT}"
-# make install DESTDIR="${HOST_STAGING}"
+# Build & install
+mkdir -p "$staging"
+make python python-config -j$(($(nproc) + 2))
+make altbininstall inclinstall libainstall bininstall DESTDIR="$staging"
 
-# Cleanup
+# Clean up
 popd
 popd
 rm -rf "$builddir"
