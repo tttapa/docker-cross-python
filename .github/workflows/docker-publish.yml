@@ -76,7 +76,7 @@ jobs:
       - name: Export staging directory
         run: |
           container=$(docker run -d ${{ env.TEMPORARY_TAG }} \
-              bash -c "chmod -R a-w /opt/${{ matrix.triple }}/python-${{ matrix.python-version }}; mv /opt/${{ matrix.triple }}/python-${{ matrix.python-version }} ${{ matrix.triple }}-py${{ matrix.python-version }}; tar czf staging.tar.gz ${{ matrix.triple }}-py${{ matrix.python-version }}")
+              bash -c "chmod -R a-w /opt/${{ matrix.triple }}; mv /opt/${{ matrix.triple }} ${{ matrix.triple }}-py${{ matrix.python-version }}; tar czf staging.tar.gz ${{ matrix.triple }}-py${{ matrix.python-version }}")
           status=$(docker wait $container)
           if [ $status -ne 0 ]; then
               echo "Error creating staging directory archives"
