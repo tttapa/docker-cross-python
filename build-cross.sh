@@ -41,6 +41,7 @@ sed -i 's@libainstall:\( \|	\)all@libainstall:@g' Makefile
 mkdir -p "$staging"
 make python python-config -j$(($(nproc) + 2))
 make altbininstall inclinstall libainstall bininstall DESTDIR="$staging"
+ln -s python-$version "$staging/../python${version%.*}"
 
 # Clean up
 popd
