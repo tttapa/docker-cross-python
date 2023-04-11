@@ -7,9 +7,9 @@ FROM ubuntu:jammy AS native-build
 RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get update && \
     apt-get install -y \
-        zlib1g-dev libbz2-dev libssl-dev uuid-dev libffi-dev libreadline-dev \
-        libsqlite3-dev libbz2-dev libncurses5-dev libreadline6-dev \
-        libgdbm-dev libgdbm-compat-dev liblzma-dev \
+        libbz2-dev libffi-dev libgdbm-dev libgdbm-compat-dev liblzma-dev \
+        libncurses5-dev libreadline6-dev libsqlite3-dev libssl-dev \
+        lzma lzma-dev uuid-dev zlib1g-dev \
         wget ca-certificates \
         build-essential && \
     apt-get clean autoclean && \
@@ -50,6 +50,18 @@ RUN bash build-cross.sh
 
 FROM ubuntu:jammy
 
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        git wget ca-certificates \
+        cmake ninja-build make pkg-config \
+        libgdbm-compat4 libgdbm6 libreadline8 readline-common \
+        libsqlite3-0 lzma \
+        xz-utils bzip2 zstd && \
+    apt-get clean autoclean && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/*
+
 ARG HOST_TRIPLE
 ENV HOST_TRIPLE ${HOST_TRIPLE}
 
@@ -63,3 +75,15 @@ RUN ln -s python3-config /usr/local/bin/python-config && \
     ln -s python3 /usr/local/bin/python && \
     ln -s pip3 /usr/local/bin/pip
 ENV PATH "/opt/x-tools/${HOST_TRIPLE}/bin:$PATH"
+
+COPY *.py /opt/${HOST_TRIPLE}/scripts/
+RUN mkdir -p /opt/${HOST_TRIPLE}/cmake && \
+    python /opt/${HOST_TRIPLE}/scripts/gen-cmake-toolchain.py \
+        ${HOST_TRIPLE} /opt/${HOST_TRIPLE}/cmake/${HOST_TRIPLE}.toolchain.cmake
+RUN mkdir -p /opt/${HOST_TRIPLE}/cmake && \
+    python /opt/${HOST_TRIPLE}/scripts/gen-py-build-cmake-cross-config.py \
+        ${HOST_TRIPLE} /opt/${HOST_TRIPLE}/cmake/${HOST_TRIPLE}.py-build-cmake.cross.toml
+RUN mkdir -p /opt/${HOST_TRIPLE}/conan/profiles && \
+    python /opt/${HOST_TRIPLE}/scripts/gen-conan-profile.py \
+        ${HOST_TRIPLE} /opt/${HOST_TRIPLE}/conan/profiles/${HOST_TRIPLE}
+RUN chmod -R a-w /opt
