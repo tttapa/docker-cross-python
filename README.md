@@ -12,4 +12,4 @@ They are Ubuntu containers with the following additions:
  - GCC 12.2 cross-compilation toolchain (`/opt/x-tools/<host-triple>`)
  - Native Python installation (`/usr/local/python`)
  - Cross-compiled Python installation (`/opt/<host-triple>/python-<version>`)
- - CMake, py-build-cmake, and Conan configuration files
+ - CMake, py-build-cmake, and Conan configuration files (`/opt/<host-triple>/{cmake,conan}`)

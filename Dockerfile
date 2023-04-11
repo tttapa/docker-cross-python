@@ -17,10 +17,13 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     rm -rf /var/lib/apt/lists/*
 
 ARG PYTHON_VERSION
+ARG PYTHON_VERSION_SUFFIX=""
 ENV PYTHON_VERSION ${PYTHON_VERSION}
+ENV PYTHON_VERSION_SUFFIX ${PYTHON_VERSION_SUFFIX}
+ENV PYTHON_VERSION_FULL ${PYTHON_VERSION}${PYTHON_VERSION_SUFFIX}
 
 COPY build-native.sh .
-RUN wget "https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz"
+RUN wget "https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION_FULL}.tgz"
 RUN bash build-native.sh
 
 # Build cross Python
@@ -31,14 +34,17 @@ ARG HOST_TRIPLE
 ENV HOST_TRIPLE ${HOST_TRIPLE}
 
 ARG PYTHON_VERSION
+ARG PYTHON_VERSION_SUFFIX=""
 ENV PYTHON_VERSION ${PYTHON_VERSION}
+ENV PYTHON_VERSION_SUFFIX ${PYTHON_VERSION_SUFFIX}
+ENV PYTHON_VERSION_FULL ${PYTHON_VERSION}${PYTHON_VERSION_SUFFIX}
 
 USER root
 
-COPY --from=native-build /opt/python-${PYTHON_VERSION} /
-RUN test "$(python3 --version)" = "Python ${PYTHON_VERSION}"
+COPY --from=native-build /opt/python-${PYTHON_VERSION_FULL} /
+RUN test "$(python3 --version)" = "Python ${PYTHON_VERSION_FULL}"
 
-COPY --from=native-build "/Python-${PYTHON_VERSION}.tgz" /
+COPY --from=native-build "/Python-${PYTHON_VERSION_FULL}.tgz" /
 
 ENV TOOLCHAIN_PATH="/home/develop/opt/${HOST_TRIPLE}"
 ENV PATH "$TOOLCHAIN_PATH/bin:$PATH"
@@ -66,9 +72,12 @@ ARG HOST_TRIPLE
 ENV HOST_TRIPLE ${HOST_TRIPLE}
 
 ARG PYTHON_VERSION
+ARG PYTHON_VERSION_SUFFIX=""
 ENV PYTHON_VERSION ${PYTHON_VERSION}
+ENV PYTHON_VERSION_SUFFIX ${PYTHON_VERSION_SUFFIX}
+ENV PYTHON_VERSION_FULL ${PYTHON_VERSION}${PYTHON_VERSION_SUFFIX}
 
-COPY --from=native-build /opt/python-${PYTHON_VERSION} /
+COPY --from=native-build /opt/python-${PYTHON_VERSION_FULL} /
 COPY --from=cross-build /home/develop/opt /opt/x-tools/
 COPY --from=cross-build /opt/${HOST_TRIPLE} /opt/${HOST_TRIPLE}
 RUN ln -s python3-config /usr/local/bin/python-config && \

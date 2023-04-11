@@ -6,7 +6,7 @@
 set -ex
 
 # Paths
-version="${PYTHON_VERSION}"
+version="${PYTHON_VERSION_FULL}"
 builddir="/tmp/build-cross"
 python="Python-$version"
 prefix="/usr/local"
