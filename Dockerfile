@@ -85,6 +85,9 @@ RUN ln -s python3-config /usr/local/bin/python-config && \
     ln -s pip3 /usr/local/bin/pip
 ENV PATH "/opt/x-tools/${HOST_TRIPLE}/bin:$PATH"
 
+RUN python3 -m ensurepip && \
+    python3 -m pip install -U pip conan build
+
 COPY *.py /opt/${HOST_TRIPLE}/scripts/
 RUN mkdir -p /opt/${HOST_TRIPLE}/cmake && \
     python /opt/${HOST_TRIPLE}/scripts/gen-cmake-toolchain.py \
