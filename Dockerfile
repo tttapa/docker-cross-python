@@ -60,13 +60,18 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
         git wget ca-certificates \
-        cmake ninja-build make pkg-config \
+        ninja-build make pkg-config \
         libgdbm-compat4 libgdbm6 libreadline8 readline-common \
         libsqlite3-0 lzma \
         xz-utils bzip2 zstd && \
     apt-get clean autoclean && \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
+
+RUN version=3.26.3 && \
+    wget https://github.com/Kitware/CMake/releases/download/v$version/cmake-$version-Linux-x86_64.sh && \
+    bash cmake-$version-Linux-x86_64.sh --skip-license --prefix=/usr/local && \
+    rm cmake-$version-Linux-x86_64.sh
 
 ARG HOST_TRIPLE
 ENV HOST_TRIPLE ${HOST_TRIPLE}
