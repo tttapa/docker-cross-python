@@ -2,6 +2,7 @@ import sys
 from platform_config import (
     PlatformConfig,
     conan_arch,
+    arch_flags,
 )
 
 cross_config_contents = """\
@@ -16,6 +17,11 @@ os=Linux
 
 [conf]
 tools.cmake.cmaketoolchain:user_toolchain=["/opt/{triple}/cmake/{triple}.toolchain.cmake"]
+tools.gnu:host_triplet="{triple}"
+tools.build:sysroot="/opt/x-tools/{triple}/{triple}/sysroot"
+tools.build:cflags={arch_flags}
+tools.build:cxxflags={arch_flags}
+tools.build:compiler_executables={{ "c": "/opt/x-tools/{triple}/bin/{triple}-gcc", "cpp": "/opt/x-tools/{triple}/bin/{triple}-g++", "fortran": "/opt/x-tools/{triple}/bin/{triple}-gfortran" }}
 """
 
 
@@ -23,6 +29,7 @@ def get_py_build_cmake_cross_config(cfg: PlatformConfig):
     subs = {
         "arch": conan_arch(cfg),
         "triple": str(cfg),
+        "arch_flags": arch_flags(cfg).split()
     }
     return cross_config_contents.format(**subs)
 
